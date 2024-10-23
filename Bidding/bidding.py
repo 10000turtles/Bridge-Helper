@@ -79,9 +79,7 @@ def valid_bids(sequence):
 
 class description:
     def __init__(self, shapes, highs, keycards, control_points, controls, forced):
-        self.shapes = (
-            shapes  # [(5,4,3,1),(5,4,2,2) ... (13,0,0,0)] is 1 spade opener shape
-        )
+        self.shapes = shapes  # [(5,5),(0,13),(0,13),]
         self.highs = highs  # []
         self.keycards = keycards  # Responses to a blackwood esc asking bid
         self.control_points = control_points  # A-2, K-1
@@ -131,7 +129,6 @@ def generate_shapes(spade_range, heart_range, diamond_range, club_range):
                     continue
                 shapes.append([s, h - s, d - h, c])
 
-    print(len(shapes))
     return shapes
 
 
