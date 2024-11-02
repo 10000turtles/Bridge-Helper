@@ -1,0 +1,12 @@
+I am trying to set up firebase with a flutter project and am not able to run the above command. The error I get is,
+
+flutterfire configure --project=bridge-helper
+
+i Found 0 Firebase projects.
+Failed to fetch your Firebase projects. Fetch failed with this: FormatException: Unexpected character (at character 1)      
+#
+^
+
+I am running this command in the correct folder, I have tried logging in and out of firebase, I have tried using different versions of the firebase CLI, and have tried using the downloadable binary and nothing works. Hopefully you guys can help me out. Thanks!
+
+-Justin :D
