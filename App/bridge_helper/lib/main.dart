@@ -1,4 +1,4 @@
-import 'package:mongo_dart/mongo_dart.dart' as mongo;
+// import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const MyHomePage(),
-        '/second': (context) => const EnterScoresPage(),
+        '/second': (context) => const BiddingPage(),
       },
     );
   }
@@ -45,8 +45,8 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class EnterScoresPage extends StatefulWidget {
-  const EnterScoresPage({super.key});
+class BiddingPage extends StatefulWidget {
+  const BiddingPage({super.key});
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -58,11 +58,30 @@ class EnterScoresPage extends StatefulWidget {
   // always marked "final".
 
   @override
-  State<EnterScoresPage> createState() => _EnterScores();
+  State<BiddingPage> createState() => _Bidding();
 }
 
-class _EnterScores extends State<EnterScoresPage> {
-  final TextEditingController _controller = TextEditingController();
+class _Bidding extends State<BiddingPage> {
+  List<List<String>> tableData = [
+    ['Pass', 'Pass', 'Pass', '1NT'],
+    ['Pass', '2♥️', 'Pass', '2♠️'],
+    ['Pass', '4♠️', 'Pass', 'Pass'],
+    ['Pass', '', '', '']
+  ];
+
+  bool showNewButtons = false;
+
+  void _showNewButtons() {
+    setState(() {
+      showNewButtons = true;
+    });
+  }
+
+  void _showOriginalButtons() {
+    setState(() {
+      showNewButtons = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,17 +89,181 @@ class _EnterScores extends State<EnterScoresPage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text("Enter your game ID: "),
-            SizedBox(
-                width: 200.0,
-                child: TextField(
-                  controller: _controller,
-                  decoration: InputDecoration(labelText: "Game ID"),
-                ))
+            Flexible(
+              flex: 5,
+              child: Column(
+                children: [
+                  // Column Titles
+                  Center(
+                    child: Table(
+                      columnWidths: const {
+                        0: FlexColumnWidth(),
+                        1: FlexColumnWidth(),
+                        2: FlexColumnWidth(),
+                        3: FlexColumnWidth(),
+                      },
+                      children: const [
+                        TableRow(
+                          children: [
+                            Center(
+                                child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                        text: 'West',
+                                        style: TextStyle(color: Colors.red))
+                                  ],
+                                ),
+                              ),
+                            )),
+                            Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text.rich(
+                                  TextSpan(
+                                    children: [
+                                      TextSpan(
+                                          text: 'North',
+                                          style: TextStyle(color: Colors.black))
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Center(
+                                child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                        text: 'East',
+                                        style: TextStyle(color: Colors.red))
+                                  ],
+                                ),
+                              ),
+                            )),
+                            Center(
+                                child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text.rich(
+                                TextSpan(
+                                  children: [
+                                    TextSpan(
+                                        text: 'South',
+                                        style: TextStyle(color: Colors.black))
+                                  ],
+                                ),
+                              ),
+                            )),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Center(
+                        child: Column(
+                          children: tableData.map((rowData) {
+                            return DataRowWidget(rowData: rowData);
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(flex: 1),
+            const Text("♠️: Q84, ♥️: AK, ♦️: A96 ,♣️: QJT98",
+                style: TextStyle(fontSize: 30)),
+            const Spacer(flex: 1),
+            Flexible(
+                flex: 3,
+                child: Column(children: [
+                  if (showNewButtons)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        IconButton(
+                          icon: Icon(Icons.arrow_back),
+                          onPressed: _showOriginalButtons,
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            ///// Action for new button 5
+                          },
+                          child: Text('NT'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Action for new button 1
+                          },
+                          child: Text('♠️'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            //// Action for new button 2
+                          },
+                          child: Text('♥️'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            ///// Action for new button 3
+                          },
+                          child: Text('♦️'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            ///// Action for new button 4
+                          },
+                          child: Text('♣️'),
+                        ),
+                      ],
+                    )
+                  else
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        ElevatedButton(
+                          onPressed: _showNewButtons,
+                          child: Text('1'),
+                        ),
+                        ElevatedButton(
+                          onPressed: _showNewButtons,
+                          child: Text('2'),
+                        ),
+                        ElevatedButton(
+                          onPressed: _showNewButtons,
+                          child: Text('3'),
+                        ),
+                        ElevatedButton(
+                          onPressed: _showNewButtons,
+                          child: Text('4'),
+                        ),
+                        ElevatedButton(
+                          onPressed: _showNewButtons,
+                          child: Text('5'),
+                        ),
+                        ElevatedButton(
+                          onPressed: _showNewButtons,
+                          child: Text('6'),
+                        ),
+                        ElevatedButton(
+                          onPressed: _showNewButtons,
+                          child: Text('7'),
+                        ),
+                      ],
+                    ),
+                ])),
+            const Spacer(),
           ],
         ),
       ),
@@ -175,6 +358,43 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+class DataRowWidget extends StatelessWidget {
+  final List<String> rowData;
+  DataRowWidget({required this.rowData});
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1.0),
+      child: Table(
+        columnWidths: const {
+          0: FlexColumnWidth(),
+          1: FlexColumnWidth(),
+          2: FlexColumnWidth(),
+          3: FlexColumnWidth(),
+        },
+        children: [
+          TableRow(
+            children: rowData.map((cellData) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    cellData,
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      // Adjust the size to make the text smaller
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          )
+        ],
+      ),
     );
   }
 }
