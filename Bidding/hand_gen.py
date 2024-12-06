@@ -6,9 +6,19 @@ from ast import literal_eval
 import itertools
 from itertools import zip_longest
 import time
-import pydealer
 import math
 import random
+
+
+def sort_suit(suit):
+    sorted = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"]
+
+    if len(suit) > 0:
+        indx = [sorted.index(i) for i in suit]
+        indx.sort()
+        suit = "".join([sorted[i] for i in indx])
+    return suit
+
 
 rank_to_str = [
     "",
@@ -72,7 +82,7 @@ class deck:
         random.shuffle(self.cards)
 
     def spot_cards(self):
-        self.cards = [i for i in self.cards if i.rank < 10]
+        self.cards = [i for i in self.cards if i.rank <= 10]
         random.shuffle(self.cards)
 
 
@@ -103,7 +113,7 @@ def points(hand):
     return aces * 4 + kings * 3 + queens * 2 + jacks
 
 
-def does_violate_conditions(hand, description, card):
+def does_violate_conditions(hand, description, card, dealing_spot_cards):
     pts = points(hand)
 
     if len(hand) > 12:
@@ -119,14 +129,17 @@ def does_violate_conditions(hand, description, card):
     return False
 
 
-def are_requirements_being_achieved(hand, description, card):
+def are_requirements_being_achieved(hand, description, card, dealing_spot_cards):
 
     suit_len = len([i for i in hand if i.suit == card.suit])
     pts = points(hand)
-
-    if (pts < description[4][0]) and (pts + points([card]) <= description[4][1]):
+    if dealing_spot_cards:
         if suit_len + 1 <= description[card.suit][0]:
             return True
+    else:
+        if (pts < description[4][0]) and (pts + points([card]) <= description[4][1]):
+            if suit_len + 1 <= description[card.suit][0]:
+                return True
 
     return False
 
@@ -153,7 +166,15 @@ def put_to_string(hand):
         if i.suit == 3:
             club_str = club_str + rank_to_str[i.rank]
 
-    return spade_str + ":" + heart_str + ":" + diamond_str + ":" + club_str
+    return (
+        sort_suit(spade_str)
+        + ":"
+        + sort_suit(heart_str)
+        + ":"
+        + sort_suit(diamond_str)
+        + ":"
+        + sort_suit(club_str)
+    )
 
 
 def hand_gen(north, east, south, west):
@@ -178,24 +199,35 @@ def hand_gen(north, east, south, west):
 
     for card in face.cards:
         random.shuffle(deal)
+        # print()
+        # print("Details of: " + card.__str__())
 
         card_delt = False
 
         for pos in deal:
 
-            if are_requirements_being_achieved(pos[0], pos[1], card):
+            if are_requirements_being_achieved(pos[0], pos[1], card, False):
                 pos[0].append(card)
                 card_delt = True
-                print(card)
+
+                # print("Hand " + str(pos[2]) + " accepted card: " + card.__str__())
                 break
+            # print(
+            #     "Hand "
+            #     + str(pos[2])
+            #     + " requirements not being ach by: "
+            #     + card.__str__()
+            # )
         if card_delt:
             continue
         for pos in deal:
-            if not does_violate_conditions(pos[0], pos[1], card):
+            if not does_violate_conditions(pos[0], pos[1], card, False):
                 pos[0].append(card)
-                print(card)
                 card_delt = True
+                # print("Hand " + str(pos[2]) + " accepted card: " + card.__str__())
                 break
+
+            # print("Hand " + str(pos[2]) + " is violated by: " + card.__str__())
         if card_delt:
             continue
         west_cards.append(card)
@@ -203,22 +235,35 @@ def hand_gen(north, east, south, west):
     for card in spot.cards:
         random.shuffle(deal)
 
+        # print()
+        # print("Details of: " + card.__str__())
+
         card_delt = False
 
         for pos in deal:
-            if are_requirements_being_achieved(pos[0], pos[1], card):
+
+            if are_requirements_being_achieved(pos[0], pos[1], card, True):
                 pos[0].append(card)
                 card_delt = True
-                print(card)
+
+                # print("Hand " + str(pos[2]) + " accepted card: " + card.__str__())
                 break
+            # print(
+            #     "Hand "
+            #     + str(pos[2])
+            #     + " requirements not being ach by: "
+            #     + card.__str__()
+            # )
         if card_delt:
             continue
         for pos in deal:
-            if not does_violate_conditions(pos[0], pos[1], card):
+            if not does_violate_conditions(pos[0], pos[1], card, True):
                 pos[0].append(card)
                 card_delt = True
-                print(card)
+                # print("Hand " + str(pos[2]) + " accepted card: " + card.__str__())
                 break
+
+            # print("Hand " + str(pos[2]) + " is violated by: " + card.__str__())
         if card_delt:
             continue
         west_cards.append(card)
@@ -236,14 +281,14 @@ def hand_gen(north, east, south, west):
 # sayc = system()
 # sayc.bulk_add_convention("SAYC.txt")
 
-print(
-    hand_gen(
-        [[2, 4], [2, 4], [2, 6], [2, 6], [15, 17]],
-        [[0, 13], [0, 13], [0, 13], [0, 13], [0, 30]],
-        [[0, 13], [0, 13], [0, 13], [0, 13], [0, 30]],
-        [[0, 13], [0, 13], [0, 13], [0, 13], [0, 30]],
-    )
-)
+# print(
+#     hand_gen(
+#         [[2, 4], [2, 4], [2, 6], [2, 6], [15, 17]],
+#         [[0, 13], [0, 13], [0, 13], [0, 13], [0, 30]],
+#         [[2, 3], [2, 3], [2, 5], [2, 5], [15, 17]],
+#         [[0, 13], [0, 13], [0, 13], [0, 13], [0, 30]],
+#     )
+# )
 
 # hand = [
 #     card.from_card("AS"),

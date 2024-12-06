@@ -8,6 +8,7 @@ from itertools import zip_longest
 import time
 from deck_of_cards import deck_of_cards
 import math
+import hand_gen
 
 suit_to_num = {"C": 0, "D": 1, "H": 2, "S": 3, "NT": 4}
 num_to_suit = ["C", "D", "H", "S", "NT"]
@@ -27,6 +28,15 @@ str_to_card = {
     "3": 3,
     "2": 2,
 }
+
+
+def sort_suit(suit):
+    sorted = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"]
+    if len(suit) > 0:
+        indx = [sorted.index(i) for i in suit]
+        indx.sort()
+        suit = "".join([sorted[i] for i in indx])
+    return suit
 
 
 class hand:
@@ -88,9 +98,14 @@ class bid:
         else:
             return self.call
 
+    def __eq__(self, other):
+        return self.string == other.string
 
-def str_to_sequence(str):
-    bids_str = str.split(" ")
+
+def str_to_sequence(s):
+    bids_str = ("".join(s.split())).split(",")
+    if bids_str[0] == "":
+        return []
     bids = []
     for b in bids_str:
         bids.append(bid(b))
@@ -106,8 +121,15 @@ for level in ["1", "2", "3", "4", "5", "6", "7"]:
 def valid_bids(sequence):
     v_bids = []
 
+    if len(sequence) > 3:
+        if sequence[-1].call == "P" and (
+            sequence[-2].call == "P" and sequence[-3].call == "P"
+        ):
+            return v_bids
+
     highest_call = bid("1C")
-    for i in range(len(sequence) - 1, -1, 1):
+
+    for i in range(len(sequence) - 1, -1, -1):
         if sequence[i].call == "B":
             highest_call = sequence[i]
             break
@@ -182,9 +204,9 @@ def generate_shapes(spade_range, heart_range, diamond_range, club_range):
 
 class convention:
     def __init__(self, bidding_sequence):
-        self.bidding_sequence = bidding_sequence
+        self.bidding_sequence = str_to_sequence(bidding_sequence)
 
-        self.undefined_responses = valid_bids(bidding_sequence)
+        self.undefined_responses = valid_bids(self.bidding_sequence)
 
         self.bids = []
         self.descriptions = []
@@ -205,7 +227,7 @@ class convention:
         self.bids.append(b)
         self.descriptions.append(description(shape, "", "", "", ""))
 
-    def what_to_bid(self, hand):
+    def what_to_bid(self, han: hand):
 
         possible_bids = []
 
@@ -215,15 +237,18 @@ class convention:
                 is_shape = True
                 is_strength = True
                 for range in shape[0:4]:
-                    if hand.shape[count] > range[1] or hand.shape[count] < range[0]:
+                    if han.shape[count] > range[1] or han.shape[count] < range[0]:
                         is_shape = False
                         break
                     count = count + 1
-                if hand.points > shape[4][1] or hand.points < shape[4][0]:
+                if han.points > shape[4][1] or han.points < shape[4][0]:
                     is_strength = False
+
                 if is_shape and is_strength:
                     possible_bids.append(b)
                     break
+        if len(possible_bids) == 0:
+            return ["P"]
 
         return possible_bids
 
@@ -235,16 +260,6 @@ def describe_hands(bids, dealer, NS_System, EW_System):
 def grouper(n, iterable, fillvalue=None):
     args = [iter(iterable)] * n
     return zip_longest(fillvalue=fillvalue, *args)
-
-
-def sort_suit(suit):
-    sorted = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"]
-
-    if len(suit) > 0:
-        indx = [sorted.index(i) for i in suit]
-        indx.sort()
-        suit = "".join([sorted[i] for i in indx])
-    return suit
 
 
 def random_hand():
@@ -286,7 +301,9 @@ class system:
 
             for seq, b, desc in list(grouper(3, inputs)):
                 try:
-                    ind = [i.bidding_sequence for i in self.conventions].index(seq)
+                    ind = [i.bidding_sequence for i in self.conventions].index(
+                        str_to_sequence(seq)
+                    )
                     self.conventions[ind].add_description(b, literal_eval(desc))
                 except:
                     self.conventions.append(convention(seq))
@@ -296,21 +313,57 @@ class system:
         for conv in self.conventions:
             if conv.bidding_sequence == sequence:
                 return conv.what_to_bid(hand)
+        return "P"
+
+
+def bid_a_hand(n_s_system: system, e_w_system: system, hands, dealer: int):
+
+    bidding_sequence = []
+    val_bid = valid_bids(bidding_sequence)
+
+    person_to_bid = dealer
+
+    while len(val_bid) > 0:
+        next_bid = ""
+        if person_to_bid == 0 or person_to_bid == 2:
+            next_bid = n_s_system.what_to_bid(hands[person_to_bid], bidding_sequence)
+        else:
+            next_bid = e_w_system.what_to_bid(hands[person_to_bid], bidding_sequence)
+
+        bidding_sequence.append(bid(next_bid[0]))
+
+        person_to_bid = (person_to_bid + 1) % 4
+        val_bid = valid_bids(bidding_sequence)
+    for i in hands:
+        print(i.string)
+    print(bidding_sequence)
 
 
 sayc = system()
 sayc.bulk_add_convention("SAYC.txt")
 
-itr = 1000000
+hands = hand_gen.hand_gen(
+    [[2, 4], [2, 4], [2, 6], [2, 6], [15, 17]],
+    [[0, 13], [0, 13], [0, 13], [0, 13], [0, 30]],
+    [[0, 13], [0, 13], [0, 13], [0, 13], [0, 30]],
+    [[0, 13], [0, 13], [0, 13], [0, 13], [0, 30]],
+)
 
-for i in range(0, itr, 1):
-    if i % (math.floor(itr / 100)) == 0:
-        print(str(i / itr * 100) + "%")
-    h = hand(random_hand())
-    bids = sayc.what_to_bid(h, "")
+hands = [hand(i) for i in hands]
 
-    if len(bids) != 1:
-        print(h.string)
-        print(h.shape)
-        print(h.points)
-        print(bids)
+bid_a_hand(sayc, sayc, hands, 0)
+
+
+# itr = 1000000
+
+# for i in range(0, itr, 1):
+#     if i % (math.floor(itr / 100)) == 0:
+#         print(str(i / itr * 100) + "%")
+#     h = hand(random_hand())
+#     bids = sayc.what_to_bid(h, str_to_sequence("1NT, P"))
+
+#     if len(bids) != 1:
+#         print(h.string)
+#         print(h.shape)
+#         print(h.points)
+#         print(bids)
